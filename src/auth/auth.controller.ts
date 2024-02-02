@@ -24,7 +24,6 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { AllergyService } from 'src/allergy/allergy.service';
-import { CreateAllergyDto } from 'src/allergy/dto/create-allergy.dto';
 import { REQUEST_USER_KEY } from 'src/common/constants';
 import { ActiveUserData } from 'src/common/interfaces/active-user-data.interface';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';

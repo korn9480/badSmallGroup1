@@ -3,27 +3,18 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseInterceptors,
   UploadedFiles,
   InternalServerErrorException,
-  UploadedFile,
   Res,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { AssetService } from './asset.service';
-import { CreateAssetDto } from './dto/create-asset.dto';
-import { FormUpdateAsset, UpdateAssetDto } from './dto/update-asset.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import * as fs from 'fs';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { Response } from 'express';
-import { Activity } from 'src/activity/entities/activity.entity';
 import { ActivityService } from 'src/activity/activity.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import {
@@ -31,8 +22,6 @@ import {
   OwnerAuthGuard,
   OwnerTable,
 } from 'src/auth/guards/owner-auth.guard';
-import { REQUEST_USER_KEY } from 'src/common/constants';
-import { ActiveUserData } from 'src/common/interfaces/active-user-data.interface';
 
 @Controller('asset')
 export class AssetController {
@@ -85,12 +74,7 @@ export class AssetController {
   ): Promise<void> {
     const filePath = `images/poster/${path}`; // แก้ไขเป็นที่อยู่ของไฟล์ที่คุณต้องการสตรีม
     // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-    if (!fs.existsSync(filePath)) {
-      res.status(404).send('File not found');
-      return;
-    }
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    this.assetService.streamFile(res, filePath);
   }
   @Public()
   @Get('images/profile/:path')
@@ -99,13 +83,7 @@ export class AssetController {
     @Param('path') path: string,
   ): Promise<void> {
     const filePath = `images/profile/${path}`; // แก้ไขเป็นที่อยู่ของไฟล์ที่คุณต้องการสตรีม
-    // ตรวจสอบว่าไฟล์มีอยู่หรือไม่
-    if (!fs.existsSync(filePath)) {
-      res.status(404).send('File not found');
-      return;
-    }
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    this.assetService.streamFile(res, filePath);
   }
 
   @Get()

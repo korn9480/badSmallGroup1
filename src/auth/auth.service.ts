@@ -45,17 +45,11 @@ export class AuthService {
         `User [${signUpDto.code_student}] already exist`,
       );
     }
-    if (signUpDto.first_name.includes('นาย')) {
-      signUpDto.prefix = 'นาย';
-      signUpDto.first_name = signUpDto.first_name
-        .replace('นาย', '')
-        .replace(' ', '');
-    } else if (signUpDto.first_name.includes('นางสาว')) {
-      signUpDto.prefix = 'นางสาว';
-      signUpDto.first_name = signUpDto.first_name
-        .replace('นางสาว', '')
-        .replace(' ', '');
-    }
+    const { prefix, first_name } = this.separatePrefixFromName(
+      signUpDto.first_name,
+    );
+    signUpDto.first_name = first_name;
+    signUpDto.prefix = prefix;
     signUpDto.password = await this.bcryptService.hash(signUpDto.password);
     await this.userRepository.save(signUpDto);
   }
@@ -70,18 +64,12 @@ export class AuthService {
       );
     }
     try {
-      if (signUpDto.first_name.includes('นาย')) {
-        signUpDto.prefix = 'นาย';
-        signUpDto.first_name = signUpDto.first_name
-          .replace('นาย', '')
-          .replace(' ', '');
-      } else if (signUpDto.first_name.includes('นางสาว')) {
-        signUpDto.prefix = 'นางสาว';
-        signUpDto.first_name = signUpDto.first_name
-          .replace('นางสาว', '')
-          .replace(' ', '');
-      }
-      // signUpDto.password = await this.bcryptService.hash(signUpDto.password);
+      const { prefix, first_name } = this.separatePrefixFromName(
+        signUpDto.first_name,
+      );
+      signUpDto.prefix = prefix;
+      signUpDto.first_name = first_name;
+
       await this.userRepository.save(signUpDto);
     } catch (error) {
       if (error.code === MysqlErrorCode.UniqueViolation) {
@@ -103,11 +91,7 @@ export class AuthService {
     if (!user) {
       throw new BadRequestException('Invalid email');
     }
-    const passwordCompare = await this.bcryptService.compare(
-      password,
-      user.password,
-    );
-    if (!passwordCompare) {
+    if (!(await this.checkPassword(password, user.password))) {
       throw new BadRequestException('Invalid password');
     }
 
@@ -138,6 +122,21 @@ export class AuthService {
     newUser.code_student = form.code_student;
     newUser.password = await this.bcryptService.hash(form.password);
     await this.userRepository.save(newUser);
+  }
+  // not call controller
+  private separatePrefixFromName(first_name: string) {
+    let prefix: string = '';
+    if (first_name.includes('นาย')) {
+      prefix = 'นาย';
+      first_name = first_name.replace('นาย', '').replace(' ', '');
+    } else if (first_name.includes('นางสาว')) {
+      prefix = 'นางสาว';
+      first_name = first_name.replace('นางสาว', '').replace(' ', '');
+    }
+    return { prefix, first_name };
+  }
+  private async checkPassword(newPassword: string, passwordOld: string) {
+    return await this.bcryptService.compare(newPassword, passwordOld);
   }
 
   private async generateAccessToken(user: Partial<User>): Promise<string> {
