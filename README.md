@@ -1,0 +1,1 @@
+# badSmallGroup1
